@@ -16,12 +16,17 @@ const bodyParser = require("body-parser");
 const { init } = require("./mongodb1");
 const routes = require("./routes");
 const cors = require("cors");
+const morgan = require("morgan");
+
+// Use morgan middleware to log incoming requests
+
 // Create a new express app
 const app = express();
 // Add the body parses middleware, as well as the HTTP routes
 app.use(cors());
 app.use(bodyParser.json());
 app.use(routes);
+app.use(morgan("combined"));
 
 // Initialize the database
 init().then(() => {
