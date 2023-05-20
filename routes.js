@@ -18,6 +18,7 @@ const {
 const User = Joi.object().keys({
   username: Joi.string(),
   password: Joi.string(),
+  email: Joi.string(),
 });
 
 // ----------------------------------------------------------------
