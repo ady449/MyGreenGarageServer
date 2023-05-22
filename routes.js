@@ -97,6 +97,30 @@ router.get("/getAll", (req, res) => {
     });
 });
 
+router.get("/getAllNames", (req, res) => {
+  getCars()
+    .then((items) => {
+      // The promise resolves with the items as results
+      items = items.map((item) => ({
+        // In mongoDB, each object has an id stored in the `_id` field
+        // here a new field called `id` is created for each item which
+        // maps to its mongo id
+        id: item._id,
+        brand: item.brand,
+        model: item.model,
+      }));
+
+      // Finally, the items are written to the response as JSON
+      res.json(items);
+    })
+    .catch((err) => {
+      // If there is an error in getting the items, we return a 500 status
+      // code, and log the error
+      console.log(err);
+      res.status(500).end();
+    });
+});
+
 //Get by ID Method
 router.get("/getOneCar/:id", (req, res) => {
   const { id } = req.params;
