@@ -33,6 +33,7 @@ const carSchema = Joi.object().keys({
   range: Joi.number().integer().min(0),
   vin: Joi.string(),
   temperature: Joi.number().integer(),
+  isLocked: Joi.boolean(),
 });
 
 //Post Method
@@ -84,6 +85,7 @@ router.get("/getAll", (req, res) => {
         temperature: item.temperature,
         range: item.range,
         vin: item.vin,
+        isLocked: item.isLocked,
       }));
 
       // Finally, the items are written to the response as JSON
