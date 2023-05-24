@@ -102,6 +102,7 @@ const registerUser = (user) => {
 };
 // export the required functions so that we can use them elsewhere
 module.exports = {
+  updateIsLocked,
   loginUser,
   registerUser,
   init,
