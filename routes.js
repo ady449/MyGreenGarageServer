@@ -4,6 +4,7 @@ const Joi = require("@hapi/joi");
 const router = express.Router();
 
 const {
+  updateIsLocked,
   loginUser,
   registerUser,
   insertCar,
