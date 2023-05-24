@@ -144,8 +144,10 @@ router.put("/update/:id", (req, res) => {
   const { id } = req.params;
 
   const temperature = req.body.temperature;
+  const isLocked = req.body.isLocked;
   // The updateQuantity function is called with the id and quantity increment
-  updateInteriorTemperature(id, temperature)
+  updateInteriorTemperature(id, temperature);
+  updateIsLocked(id, isLocked)
     .then(() => {
       // If the update is successful, return a 200 OK status
       res.json("temperature updated");

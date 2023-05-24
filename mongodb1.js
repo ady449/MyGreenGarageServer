@@ -18,6 +18,10 @@ function validateInteger(value) {
   return validator.isInt(String(value));
 }
 
+function validateBoolean(value) {
+  return validator.isBoolean(String(value));
+}
+
 // db.js
 
 // import the `MongoClient` object from the library
@@ -71,6 +75,18 @@ const updateInteriorTemperature = (id, quantity) => {
     return collection.updateOne(
       { _id: new ObjectId(id) },
       { $set: { temperature: quantity } }
+    );
+  }
+
+  return Promise.reject(new Error("Invalid quantity provided."));
+};
+const updateIsLocked = (id, quantity) => {
+  const collection = db.collection("Car");
+  //   console.log("id is " + id + " quantity is " + quantity);
+  if (validateBoolean(quantity)) {
+    return collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { isLocked: quantity } }
     );
   }
 
