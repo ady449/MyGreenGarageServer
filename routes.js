@@ -35,6 +35,9 @@ const carSchema = Joi.object().keys({
   vin: Joi.string(),
   temperature: Joi.number().integer(),
   isLocked: Joi.boolean(),
+  camera: Joi.boolean(),
+  km: Joi.number().integer(),
+  geolocation: Joi.json(),
 });
 
 //Post Method
@@ -87,6 +90,9 @@ router.get("/getAll", (req, res) => {
         range: item.range,
         vin: item.vin,
         isLocked: item.isLocked,
+        km: item.km,
+        camera: item.camera,
+        geolocation: item.geolocation,
       }));
 
       // Finally, the items are written to the response as JSON
@@ -151,7 +157,7 @@ router.put("/update/:id", (req, res) => {
   updateIsLocked(id, isLocked)
     .then(() => {
       // If the update is successful, return a 200 OK status
-      res.json("temperature updated");
+      res.json("car updated");
       res.status(200).end();
     })
     .catch((err) => {
