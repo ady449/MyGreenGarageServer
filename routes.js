@@ -37,8 +37,11 @@ const carSchema = Joi.object().keys({
   isLocked: Joi.boolean(),
   camera: Joi.boolean(),
   km: Joi.number().integer(),
-  geolocation: Joi.json(),
-});
+  geolocation: Joi.object().keys({
+    latitude: Joi.number();
+    longitude: Joi.number();
+  })
+})
 
 //Post Method
 router.post("/insertCar", (req, res) => {
