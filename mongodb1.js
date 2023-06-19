@@ -56,9 +56,31 @@ const insertCar = (item) => {
 };
 
 // get all items from the "items" collection
-const getCars = () => {
-  const collection = db.collection("Car");
-  return collection.find({}).toArray();
+// const getCars = () =>{
+//     const collection = db.collection("Car");
+//     return collection.find({}).toArray();
+
+// }
+const getCars = (id) => {
+  const garagesCollection = db.collection("Garaj");
+  const userCol = db.collection("User");
+
+  const userGarage = userCol.find({ _id: id });
+  if (!userGarage) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  const garages = garagesCollection
+    .find({ _id: userGarage.garage })
+    .toArray((err, garages) => {
+      if (err) {
+        console.error("Error fetching garages: ", err);
+        res.sendStatus(500);
+        return;
+      }
+
+      res.json(garages);
+    });
+  return garages;
 };
 const getOneCar = (id) => {
   const collection = db.collection("Car");
