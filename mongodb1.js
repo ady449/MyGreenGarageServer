@@ -65,7 +65,8 @@ const getCars = (id) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
 
-  const userGarage = userCol.find({ _id: new ObjectId(id) });
+  const userGarage = userCol.findOne({ username: id });
+  console.log("userGarage ", userGarage);
   if (!userGarage) {
     return res.status(404).json({ message: "User not found" });
   }
@@ -80,6 +81,7 @@ const getCars = (id) => {
 
       res.json(garages);
     });
+  console.log(garages);
   return garages;
 };
 const getOneCar = (id) => {

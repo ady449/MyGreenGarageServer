@@ -75,8 +75,9 @@ router.post("/insertCar", (req, res) => {
 
 //Get all Method
 router.get("/getAll", (req, res) => {
-  const userId = req.body.userId;
-  getCars(userId)
+  const username = req.body.username;
+  console.log(username);
+  getCars(username)
     .then((items) => {
       // The promise resolves with the items as results
       items = items.map((item) => ({
