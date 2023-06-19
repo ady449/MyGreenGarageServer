@@ -64,7 +64,7 @@ const insertCar = (item) => {
 const getCars = async (id) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
-
+  const carsCollection = db.collection("Car");
   try {
     const userGarage = await userCol.findOne({ username: id });
     console.log("userGarage ", userGarage);
