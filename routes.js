@@ -74,7 +74,7 @@ router.post("/insertCar", (req, res) => {
 });
 
 //Get all Method
-router.get("/getAll", (req, res) => {
+router.get("/getAll", async (req, res) => {
   const username = req.body.username;
   console.log(username);
   getCars(username)
