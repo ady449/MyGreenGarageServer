@@ -82,7 +82,7 @@ const getCars = async (id) => {
 
         res.json(garages);
       });
-    const cars = await carsCollection.find({ _id: { $in: garages } });
+    const cars = await carsCollection.find({ _id: { $in: garages.Cars } });
     console.log("garages ", garages);
     console.log("cars ", cars);
     return cars.toArray();
