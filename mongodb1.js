@@ -71,7 +71,7 @@ const getCars = async (id) => {
     if (!userGarage) {
       return res.status(404).json({ message: "User not found" });
     }
-    const garages = garagesCollection
+    const garages = await garagesCollection
       .find({ _id: new ObjectId(userGarage.garage) })
       .toArray((err, garages) => {
         if (err) {
