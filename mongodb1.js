@@ -82,8 +82,10 @@ const getCars = async (id) => {
 
         res.json(garages);
       });
-    console.log(garages);
-    return garages;
+    const cars = await carsCollection.find({ _id: { $in: garages } });
+    console.log("garages ", garages);
+    console.log("cars ", cars);
+    return cars.toArray();
   } catch (err) {
     console.error("Error fetching garages: ", err);
     res.sendStatus(500);
