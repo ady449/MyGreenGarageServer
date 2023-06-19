@@ -65,12 +65,12 @@ const getCars = (id) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
 
-  const userGarage = userCol.find({ _id: id });
+  const userGarage = userCol.find({ _id: new ObjectId(id) });
   if (!userGarage) {
     return res.status(404).json({ message: "User not found" });
   }
   const garages = garagesCollection
-    .find({ _id: userGarage.garage })
+    .find({ _id: new ObjectId(userGarage.garage) })
     .toArray((err, garages) => {
       if (err) {
         console.error("Error fetching garages: ", err);
