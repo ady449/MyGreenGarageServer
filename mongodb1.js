@@ -65,24 +65,29 @@ const getCars = (id) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
 
-  const userGarage = userCol.findOne({ username: id });
-  console.log("userGarage ", userGarage);
-  if (!userGarage) {
-    return res.status(404).json({ message: "User not found" });
-  }
-  const garages = garagesCollection
-    .find({ _id: new ObjectId(userGarage.garage) })
-    .toArray((err, garages) => {
-      if (err) {
-        console.error("Error fetching garages: ", err);
-        res.sendStatus(500);
-        return;
+  try{
+      const userGarage = await userCol.findOne({ username: id });
+      console.log("userGarage ", userGarage);
+      if (!userGarage) {
+        return res.status(404).json({ message: "User not found" });
       }
-
-      res.json(garages);
-    });
-  console.log(garages);
-  return garages;
+      const garages = garagesCollection
+        .find({ _id: new ObjectId(userGarage.garage) })
+        .toArray((err, garages) => {
+          if (err) {
+            console.error("Error fetching garages: ", err);
+            res.sendStatus(500);
+            return;
+          }
+    
+          res.json(garages);
+        });
+      console.log(garages);
+      return garages;
+  }catch (err) {
+    console.error('Error fetching garages: ', err);
+    res.sendStatus(500);
+  }
 };
 const getOneCar = (id) => {
   const collection = db.collection("Car");
