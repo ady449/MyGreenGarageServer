@@ -17,7 +17,7 @@ const { init } = require("./mongodb1");
 const routes = require("./routes");
 const cors = require("cors");
 const morgan = require("morgan");
-
+const crypto = require("crypto");
 // Use morgan middleware to log incoming requests
 
 // Create a new express app
@@ -28,10 +28,31 @@ app.use(bodyParser.json());
 app.use(routes);
 app.use(morgan("combined"));
 
+const fs = require("fs");
+const dotenv = require("dotenv");
+
+// Set the value of an environment variable
+
 // Initialize the database
 init().then(() => {
   // Once the database is initialized, start the server by listening
   // on port 3000
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+    // The standard secure default length for RSA keys is 2048 bits
+    modulusLength: 2048,
+  });
+
+  dotenv.config(); // Load the existing variables from .env
+  const envConfig = dotenv.parse(fs.readFileSync(".env"));
+
+  envConfig.PRIVATE_KEY = privateKey;
+  envConfig.PUBLIC_KEY = publicKey;
+
+  const envFile = Object.keys(envConfig)
+    .map((key) => `${key}=${envConfig[key]}`)
+    .join("\n");
+  fs.writeFileSync(".env", envFile);
+
   console.log(`starting server on port ${port}`);
   app.listen(port, "0.0.0.0");
 });

@@ -68,7 +68,7 @@ router.post("/insertCar", (req, res) => {
     .catch((err) => {
       // If there is any error in inserting the item, log the error and
       // return a 500 server error status
-      console.log(err);
+      console.error(err);
       res.status(500).end();
     });
 });
@@ -76,7 +76,6 @@ router.post("/insertCar", (req, res) => {
 //Get all Method
 router.get("/getAll", async (req, res) => {
   const username = req.body.username;
-  console.log(username);
   getCars(username)
     .then((items) => {
       // The promise resolves with the items as results
@@ -106,7 +105,7 @@ router.get("/getAll", async (req, res) => {
     .catch((err) => {
       // If there is an error in getting the items, we return a 500 status
       // code, and log the error
-      console.log(err);
+      console.error(err);
       res.status(500).end();
     });
 });
@@ -220,7 +219,9 @@ router.post("/register", async (req, res) => {
       res.status(500).end();
     });
 });
-
+router.post('/insertallcars', registerUser){
+    
+}
 router.post("/login", async function (req, res) {
   try {
     // check if the user exists

@@ -3,6 +3,8 @@ require("dotenv").config();
 const dbHost = process.env.DB_HOST;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
+const public_key = process.env.PUBLIC_KEY;
+const private_key = process.env.PRIVATE_KEY;
 
 // Rest of your server code
 
@@ -67,7 +69,6 @@ const getCars = async (id) => {
   const carsCollection = db.collection("Car");
   try {
     const userGarage = await userCol.findOne({ username: id });
-    console.log("userGarage ", userGarage);
     if (!userGarage) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -83,14 +84,31 @@ const getCars = async (id) => {
         res.json(garages);
       });
     const cars = await carsCollection.find({ _id: { $in: garages[0].Cars } });
-    console.log("garages ", garages[0], garages.Cars, garages[0].Cars);
-    console.log("cars ", cars);
+
     return cars.toArray();
   } catch (err) {
     console.error("Error fetching garages: ", err);
     res.sendStatus(500);
   }
 };
+//cand creez cont sa creeze loc si pentru garaj
+const addCarFull = (item, username) => {
+  const carsCollection = db.collection("Car");
+  const garajCollection = db.collection("Garaj");
+  const usersCollection = db.collection("Users");
+  const insertResult = await carsCollection.insertOne(item);
+  const insertedCarId = insertResult.insertedId;
+  console.log("insert id is ", insertedCarId);
+
+  const userGarage = await garajCollection.findOne({ username: username });
+  console.log("userGarage",userGarage);
+  return  await garajCollection.updateOne(
+    { _id:  new ObjectId(userGarage.garage) },
+    { $push: { 'Cars': insertedCarId} }
+  );
+
+};
+
 const getOneCar = (id) => {
   const collection = db.collection("Car");
   return collection.find({ _id: new ObjectId(id) }).toArray();
@@ -125,11 +143,50 @@ const updateIsLocked = (id, quantity) => {
 };
 const loginUser = (user) => {
   const collection = db.collection("User");
-  return collection.findOne({ username: user.username });
+  var user = collection.findOne({ username: user.username })
+  const decryptedData = crypto.privateDecrypt(
+    {
+      key: private_key,
+      // In order to decrypt the data, we need to specify the
+      // same hashing function and padding scheme that we used to
+      // encrypt the data in the previous step
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    user.password,
+  );
+  
+  user.password = decryptedData;
+
+  // The decrypted data is of the Buffer type, which we can convert to a
+  // string to reveal the original data
+  console.log("decrypted data: ", decryptedData.toString());
+  
+  return user;
 };
 const registerUser = (user) => {
-  const collection = db.collection("User");
+    const collection = db.collection("User");
+  
+// This is the data we want to encrypt
+    const data = user.password;
+
+    const encryptedData = crypto.publicEncrypt(
+    {
+        key: public_key,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: "sha256",
+    },
+    // We convert the data string to a buffer using `Buffer.from`
+        Buffer.from(data)
+    );
+    
+    user.password = encryptedData.toString("base64");
+    // The encrypted data is in the form of bytes, so we print it in base64 format
+    // so that it's displayed in a more readable form
+    console.log("encypted data: ", encryptedData.toString("base64"));
+
   return collection.insertOne(user);
+  
 };
 // export the required functions so that we can use them elsewhere
 module.exports = {
@@ -141,5 +198,6 @@ module.exports = {
   getCars,
   getOneCar,
   deleteCar,
+  addCarFullName,
   updateInteriorTemperature,
 };
