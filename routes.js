@@ -72,6 +72,34 @@ router.post("/insertCar", (req, res) => {
       res.status(500).end();
     });
 });
+router.post("/insertCarFull", (req, res) => {
+  // We get the item from the request body
+  const car = req.body;
+
+  // The itemSchema is used to validate the fields of the item
+  const result = carSchema.validate(car);
+  if (result.error) {
+    // if any of the fields are wrong, log the error and return a 400 status
+    console.log(result.error);
+
+    res.status(400).end();
+    return;
+  }
+
+  // If the validation passes, insert the item into the DB
+  addCarFull(car, car.username)
+    .then(() => {
+      // Once the item is inserted successfully, return a 200 OK status
+      res.json(car);
+      res.status(200).end();
+    })
+    .catch((err) => {
+      // If there is any error in inserting the item, log the error and
+      // return a 500 server error status
+      console.error(err);
+      res.status(500).end();
+    });
+});
 
 //Get all Method
 router.get("/getAll", async (req, res) => {

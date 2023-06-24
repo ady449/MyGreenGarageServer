@@ -96,19 +96,18 @@ const addCarFull = (item, username) => {
   const carsCollection = db.collection("Car");
   const garajCollection = db.collection("Garaj");
   const usersCollection = db.collection("Users");
-// insereaza vehicul
+  // insereaza vehicul
   const insertResult = carsCollection.insertOne(item);
   // ObjectId al obiectului inserat mai sus
   const insertedCarId = insertResult.insertedId;
   console.log("insert id is ", insertedCarId);
 
-  const userGarage = await garajCollection.findOne({ username: username });
-  console.log("userGarage",userGarage);
-  return  await garajCollection.updateOne(
-    { _id:  new ObjectId(userGarage.garage) },
-    { $push: { 'Cars': insertedCarId} }
+  const userGarage = garajCollection.findOne({ username: username });
+  console.log("userGarage", userGarage);
+  return garajCollection.updateOne(
+    { _id: new ObjectId(userGarage.garage) },
+    { $push: { Cars: insertedCarId } }
   );
-
 };
 
 const getOneCar = (id) => {
@@ -145,7 +144,7 @@ const updateIsLocked = (id, quantity) => {
 };
 const loginUser = (user) => {
   const collection = db.collection("User");
-  var user = collection.findOne({ username: user.username })
+  var user = collection.findOne({ username: user.username });
   const decryptedData = crypto.privateDecrypt(
     {
       key: private_key,
@@ -155,40 +154,38 @@ const loginUser = (user) => {
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
       oaepHash: "sha256",
     },
-    user.password,
+    user.password
   );
-  
+
   user.password = decryptedData;
 
   // The decrypted data is of the Buffer type, which we can convert to a
   // string to reveal the original data
   console.log("decrypted data: ", decryptedData.toString());
-  
+
   return user;
 };
 const registerUser = (user) => {
-    const collection = db.collection("User");
-  
+  const collection = db.collection("User");
 
-    const data = user.password;
+  const data = user.password;
 
-    const encryptedData = crypto.publicEncrypt(
+  const encryptedData = crypto.publicEncrypt(
     {
-        key: public_key,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: "sha256",
+      key: public_key,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
     },
     // We convert the data string to a buffer using `Buffer.from`
-        Buffer.from(data)
-    );
-    
-    user.password = encryptedData.toString("base64");
-    // The encrypted data is in the form of bytes, so we print it in base64 format
-    // so that it's displayed in a more readable form
-    console.log("encypted data: ", encryptedData.toString("base64"));
+    Buffer.from(data)
+  );
+
+  user.password = encryptedData.toString("base64");
+  // The encrypted data is in the form of bytes, so we print it in base64 format
+  // so that it's displayed in a more readable form
+  console.log("encypted data: ", encryptedData.toString("base64"));
 
   return collection.insertOne(user);
-  
 };
 // export the required functions so that we can use them elsewhere
 module.exports = {
@@ -200,6 +197,6 @@ module.exports = {
   getCars,
   getOneCar,
   deleteCar,
-  addCarFullName,
+  addCarFull,
   updateInteriorTemperature,
 };
