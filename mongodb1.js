@@ -96,7 +96,9 @@ const addCarFull = (item, username) => {
   const carsCollection = db.collection("Car");
   const garajCollection = db.collection("Garaj");
   const usersCollection = db.collection("Users");
-  const insertResult = await carsCollection.insertOne(item);
+// insereaza vehicul
+  const insertResult = carsCollection.insertOne(item);
+  // ObjectId al obiectului inserat mai sus
   const insertedCarId = insertResult.insertedId;
   console.log("insert id is ", insertedCarId);
 
@@ -167,7 +169,7 @@ const loginUser = (user) => {
 const registerUser = (user) => {
     const collection = db.collection("User");
   
-// This is the data we want to encrypt
+
     const data = user.password;
 
     const encryptedData = crypto.publicEncrypt(
