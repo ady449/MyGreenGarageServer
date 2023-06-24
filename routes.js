@@ -247,9 +247,7 @@ router.post("/register", async (req, res) => {
       res.status(500).end();
     });
 });
-router.post('/insertallcars', registerUser){
-    
-}
+
 router.post("/login", async function (req, res) {
   try {
     // check if the user exists
