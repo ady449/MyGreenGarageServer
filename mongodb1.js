@@ -91,23 +91,64 @@ const getCars = async (id) => {
     res.sendStatus(500);
   }
 };
-//cand creez cont sa creeze loc si pentru garaj
-const addCarFull = (item, username) => {
-  const carsCollection = db.collection("Car");
-  const garajCollection = db.collection("Garaj");
-  const usersCollection = db.collection("Users");
-  // insereaza vehicul
-  const insertResult = carsCollection.insertOne(item);
-  // ObjectId al obiectului inserat mai sus
-  const insertedCarId = insertResult.insertedId;
-  console.log("insert id is ", insertedCarId);
 
-  const userGarage = garajCollection.findOne({ username: username });
-  console.log("userGarage", userGarage);
-  return garajCollection.updateOne(
-    { _id: new ObjectId(userGarage.garage) },
-    { $push: { Cars: insertedCarId } }
-  );
+const addCarInGarage = async (insertedCarId, user) => {
+  const garajCollection = db.collection("Garaj");
+  try {
+    const userGarage = await garajCollection.findOne({ _id: user.garage });
+    const checkCarInGarage = userGarage.Cars.some((item) =>
+      item.equals(insertedCarId)
+    );
+
+    if (checkCarInGarage) {
+      console.log("Object exists in the garage");
+      return;
+    } else {
+      console.log("Object does not exist in the garage");
+      const result = await garajCollection.updateOne(
+        { _id: user.garage },
+        { $push: { Cars: insertedCarId } }
+      );
+      console.log("Car added successfully.");
+    }
+  } catch (err) {
+    console.error("Error updating document:", err);
+  }
+};
+//cand creez cont sa creeze loc si pentru garaj
+const addCarFull = async (item, un) => {
+  const carsCollection = db.collection("Car");
+  const usersCollection = db.collection("User");
+  const checkUserExist = await usersCollection.findOne({ username: un });
+  if (checkUserExist === undefined || checkUserExist === null) {
+    console.error("User " + un + " cannot be found.");
+    return;
+  }
+  //verific daca se poate adauga vehicul
+  const checkCarInCarCollection = await carsCollection.findOne({
+    vin: item.vin,
+  });
+
+  if (
+    checkCarInCarCollection != null &&
+    checkUserExist != null &&
+    checkUserExist != undefined
+  ) {
+    console.error("Car already exists");
+    const result = await addCarInGarage(
+      checkCarInCarCollection._id,
+      checkUserExist
+    );
+    return result;
+  } else if (checkUserExist != null && checkUserExist != undefined) {
+    // insereaza vehicul
+    const insertResult = await carsCollection.insertOne(item);
+    // ObjectId al obiectului inserat mai sus
+    insertedCarId = insertResult.insertedId;
+    console.log("The car has been added successfully!");
+    const result = await addCarInGarage(insertedCarId, checkUserExist);
+    return result;
+  }
 };
 
 const getOneCar = (id) => {

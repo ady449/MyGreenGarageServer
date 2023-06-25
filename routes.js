@@ -11,6 +11,7 @@ const {
   getCars,
   getOneCar,
   deleteCar,
+  addCarFull,
   updateInteriorTemperature,
 } = require("./mongodb1");
 
@@ -74,7 +75,7 @@ router.post("/insertCar", (req, res) => {
 });
 router.post("/insertCarFull", (req, res) => {
   // We get the item from the request body
-  const car = req.body;
+  const car = req.body.car;
 
   // The itemSchema is used to validate the fields of the item
   const result = carSchema.validate(car);
@@ -87,10 +88,10 @@ router.post("/insertCarFull", (req, res) => {
   }
 
   // If the validation passes, insert the item into the DB
-  addCarFull(car, car.username)
+  addCarFull(car, req.body.user.username)
     .then(() => {
       // Once the item is inserted successfully, return a 200 OK status
-      res.json(car);
+      res.json(addCarFull);
       res.status(200).end();
     })
     .catch((err) => {
