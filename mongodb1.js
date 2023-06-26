@@ -91,14 +91,14 @@ const carSchema = Joi.object().keys({
     longitude: Joi.number(),
   }),
 });
-const getCars = async (id) => {
+const getCars = async (un) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
   const carsCollection = db.collection("Car");
   try {
-    const userGarage = await userCol.findOne({ username: id });
+    const userGarage = await userCol.findOne({ username: un });
     if (!userGarage) {
-      return res.status(404).json({ message: "User not found" });
+      return "User not found";
     }
     const garages = await garagesCollection
       .find({ _id: new ObjectId(userGarage.garage) })
@@ -116,7 +116,7 @@ const getCars = async (id) => {
     return cars.toArray();
   } catch (err) {
     console.error("Error fetching garages: ", err);
-    res.sendStatus(500);
+    return err;
   }
 };
 

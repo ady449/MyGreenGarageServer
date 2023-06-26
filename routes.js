@@ -66,14 +66,12 @@ router.get("/getAll", async (req, res) => {
     });
 });
 
-router.get("/getAllNames", (req, res) => {
-  getCars()
+router.get("/getAllNames/:username", (req, res) => {
+  const { username } = req.params;
+  getCars(username)
     .then((items) => {
-      // The promise resolves with the items as results
+      //   The promise resolves with the items as results
       items = items.map((item) => ({
-        // In mongoDB, each object has an id stored in the `_id` field
-        // here a new field called `id` is created for each item which
-        // maps to its mongo id
         id: item._id,
         brand: item.brand,
         model: item.model,
