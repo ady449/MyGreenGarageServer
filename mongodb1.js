@@ -3,19 +3,14 @@ require("dotenv").config();
 const dbHost = process.env.DB_HOST;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
-const public_key = process.env.PUBLIC_KEY;
-const private_key = process.env.PRIVATE_KEY;
-
-// Rest of your server code
-
+const bcrypt = require("bcrypt");
 const express = require("express");
-
 const username = encodeURIComponent(dbUser);
 const password = encodeURIComponent(dbPassword);
-
 const app = express();
 const validator = require("validator");
-
+const Joi = require("@hapi/joi");
+Joi.objectId = require("joi-objectid")(Joi);
 function validateInteger(value) {
   return validator.isInt(String(value));
 }
@@ -63,6 +58,39 @@ const insertCar = (item) => {
 //     return collection.find({}).toArray();
 
 // }
+// --------------Garage schema-----------
+const garageSchema = Joi.object({
+  _id: Joi.objectId(),
+  Cars: Joi.array(),
+});
+// --------------User schema-----------
+
+const User = Joi.object().keys({
+  name: Joi.string(),
+  username: Joi.string(),
+  password: Joi.string(),
+  email: Joi.string(),
+});
+
+// -----------------------------Car schema-----------------------------------
+const carSchema = Joi.object().keys({
+  brand: Joi.string(),
+  model: Joi.string(),
+  dateofmanufacture: Joi.string(),
+  batterylife: Joi.number().integer().min(0).max(100),
+  batterylevel: Joi.number().integer().min(0).max(100),
+  insurance: Joi.string(),
+  range: Joi.number().integer().min(0),
+  vin: Joi.string(),
+  temperature: Joi.number().integer(),
+  isLocked: Joi.boolean(),
+  camera: Joi.boolean(),
+  km: Joi.number().integer(),
+  geolocation: Joi.object().keys({
+    latitude: Joi.number(),
+    longitude: Joi.number(),
+  }),
+});
 const getCars = async (id) => {
   const garagesCollection = db.collection("Garaj");
   const userCol = db.collection("User");
@@ -92,31 +120,83 @@ const getCars = async (id) => {
   }
 };
 
+async function verifyPassword(password, hashedPassword) {
+  try {
+    if (
+      password != null &&
+      hashedPassword != null &&
+      password != undefined &&
+      hashedPassword != undefined
+    ) {
+      const isMatch = await bcrypt.compare(password, hashedPassword);
+      return isMatch;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+// Function to hash and verify the password
+async function hashPassword(password) {
+  try {
+    // Generate a unique salt for the user
+    const salt = await bcrypt.genSalt(10);
+    // Hash the password with the salt
+    return await bcrypt.hash(password, salt);
+  } catch (error) {
+    console.error("Hash password error: ", error);
+  }
+}
 const addCarInGarage = async (insertedCarId, user) => {
   const garajCollection = db.collection("Garaj");
   try {
+    //verifica daca exista user in garaj
     const userGarage = await garajCollection.findOne({ _id: user.garage });
-    const checkCarInGarage = userGarage.Cars.some((item) =>
-      item.equals(insertedCarId)
-    );
-
+    // verifica daca exista deja o masian introdusa in garaj
+    let checkCarInGarage;
+    if (userGarage) {
+      checkCarInGarage = userGarage.Cars.some((item) =>
+        item.equals(insertedCarId)
+      );
+    } else {
+      console.error(
+        "Garage not found for user: ",
+        user.username,
+        "with id " + user._id
+      );
+      return;
+    }
     if (checkCarInGarage) {
       console.log("Object exists in the garage");
       return;
+      // daca nu exista vehicul in garaj, il adauga in garaj.
     } else {
       console.log("Object does not exist in the garage");
       const result = await garajCollection.updateOne(
         { _id: user.garage },
         { $push: { Cars: insertedCarId } }
       );
-      console.log("Car added successfully.");
+      if (!!result) {
+        console.log("Car added successfully.");
+      }
     }
   } catch (err) {
     console.error("Error updating document:", err);
   }
 };
-//cand creez cont sa creeze loc si pentru garaj
+//se creaza graj la crearea utilizatorului
 const addCarFull = async (item, un) => {
+  const result = carSchema.validate(item);
+
+  if (result.error) {
+    // if any of the fields are wrong, log the error and return a 400 status
+    console.log(result.error);
+
+    res.status(400).end();
+    return;
+  }
+
   const carsCollection = db.collection("Car");
   const usersCollection = db.collection("User");
   const checkUserExist = await usersCollection.findOne({ username: un });
@@ -129,11 +209,7 @@ const addCarFull = async (item, un) => {
     vin: item.vin,
   });
 
-  if (
-    checkCarInCarCollection != null &&
-    checkUserExist != null &&
-    checkUserExist != undefined
-  ) {
+  if (checkCarInCarCollection && checkUserExist) {
     console.error("Car already exists");
     const result = await addCarInGarage(
       checkCarInCarCollection._id,
@@ -183,51 +259,43 @@ const updateIsLocked = (id, quantity) => {
 
   return Promise.reject(new Error("Invalid quantity provided."));
 };
-const loginUser = (user) => {
+const loginUser = async (user1) => {
   const collection = db.collection("User");
-  var user = collection.findOne({ username: user.username });
-  const decryptedData = crypto.privateDecrypt(
-    {
-      key: private_key,
-      // In order to decrypt the data, we need to specify the
-      // same hashing function and padding scheme that we used to
-      // encrypt the data in the previous step
-      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-      oaepHash: "sha256",
-    },
-    user.password
-  );
+  const validate = User.validate(user1);
+  if (validate.error) {
+    // if any of the fields are wrong, log the error and return a 400 status
+    console.log(validate.error);
+    return 3;
+  }
 
-  user.password = decryptedData;
+  var user = await collection.findOne({ username: user1.username });
 
-  // The decrypted data is of the Buffer type, which we can convert to a
-  // string to reveal the original data
-  console.log("decrypted data: ", decryptedData.toString());
-
-  return user;
+  if (user && user1 && verifyPassword(user1.password, user.password)) {
+    return user1;
+  } else {
+    return null;
+  }
 };
-const registerUser = (user) => {
+const registerUser = async (user) => {
   const collection = db.collection("User");
+  const garageCollection = db.collection("Garaj");
+  const hash = await hashPassword(user.password);
+  user.password = hash;
+  let garage = { _id: new ObjectId(), Cars: new Array() };
 
-  const data = user.password;
-
-  const encryptedData = crypto.publicEncrypt(
-    {
-      key: public_key,
-      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-      oaepHash: "sha256",
-    },
-    // We convert the data string to a buffer using `Buffer.from`
-    Buffer.from(data)
-  );
-
-  user.password = encryptedData.toString("base64");
-  // The encrypted data is in the form of bytes, so we print it in base64 format
-  // so that it's displayed in a more readable form
-  console.log("encypted data: ", encryptedData.toString("base64"));
-
-  return collection.insertOne(user);
+  //   const validationResult = garageSchema.validate(garage);
+  const validationResult = true;
+  if (validationResult.error) {
+    // Validation failed
+    console.error("validation garage error: " + validationResult.error);
+  } else {
+    // Validation successfulconsole.log("Data is valid");
+    garageCollection.insertOne(garage);
+    user.garage = garage._id;
+    return collection.insertOne(user);
+  }
 };
+
 // export the required functions so that we can use them elsewhere
 module.exports = {
   updateIsLocked,

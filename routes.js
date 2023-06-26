@@ -1,7 +1,6 @@
 const express = require("express");
-const Joi = require("@hapi/joi");
-
 const router = express.Router();
+const crypto = require("crypto");
 
 const {
   updateIsLocked,
@@ -15,80 +14,8 @@ const {
   updateInteriorTemperature,
 } = require("./mongodb1");
 
-// --------------User schema-----------
-
-const User = Joi.object().keys({
-  username: Joi.string(),
-  password: Joi.string(),
-  email: Joi.string(),
-});
-
-// ----------------------------------------------------------------
-
-const carSchema = Joi.object().keys({
-  brand: Joi.string(),
-  model: Joi.string(),
-  dateofmanufacture: Joi.string(),
-  batterylife: Joi.number().integer().min(0).max(100),
-  batterylevel: Joi.number().integer().min(0).max(100),
-  insurance: Joi.string(),
-  range: Joi.number().integer().min(0),
-  vin: Joi.string(),
-  temperature: Joi.number().integer(),
-  isLocked: Joi.boolean(),
-  camera: Joi.boolean(),
-  km: Joi.number().integer(),
-  geolocation: Joi.object().keys({
-    latitude: Joi.number(),
-    longitude: Joi.number(),
-  }),
-});
-
-//Post Method
-router.post("/insertCar", (req, res) => {
-  // We get the item from the request body
-  const car = req.body;
-
-  // The itemSchema is used to validate the fields of the item
-  const result = carSchema.validate(car);
-  if (result.error) {
-    // if any of the fields are wrong, log the error and return a 400 status
-    console.log(result.error);
-
-    res.status(400).end();
-    return;
-  }
-
-  // If the validation passes, insert the item into the DB
-  insertCar(car)
-    .then(() => {
-      // Once the item is inserted successfully, return a 200 OK status
-      res.json(car);
-      res.status(200).end();
-    })
-    .catch((err) => {
-      // If there is any error in inserting the item, log the error and
-      // return a 500 server error status
-      console.error(err);
-      res.status(500).end();
-    });
-});
 router.post("/insertCarFull", (req, res) => {
-  // We get the item from the request body
-  const car = req.body.car;
-
-  // The itemSchema is used to validate the fields of the item
-  const result = carSchema.validate(car);
-  if (result.error) {
-    // if any of the fields are wrong, log the error and return a 400 status
-    console.log(result.error);
-
-    res.status(400).end();
-    return;
-  }
-
-  // If the validation passes, insert the item into the DB
-  addCarFull(car, req.body.user.username)
+  addCarFull(req.body.car, req.body.user.username)
     .then(() => {
       // Once the item is inserted successfully, return a 200 OK status
       res.json(addCarFull);
@@ -223,19 +150,12 @@ router.get("/secret", isLoggedIn, function (req, res) {
 
 // method post for register
 router.post("/register", async (req, res) => {
-  const validate = User.validate(req.body);
-  if (validate.error) {
-    // if any of the fields are wrong, log the error and return a 400 status
-    console.log(validate.error);
-
-    res.status(400).end();
-    return;
-  }
-
   const user = await loginUser(req.body);
 
   if (user) {
     return res.status(400).json({ message: "User already exists" });
+  } else if (user == 3) {
+    return res.status(400).json({ message: "user validation error" });
   }
 
   registerUser(req.body)
@@ -252,17 +172,8 @@ router.post("/register", async (req, res) => {
 router.post("/login", async function (req, res) {
   try {
     // check if the user exists
-    const validate = User.validate(req.body);
-    if (validate.error) {
-      // if any of the fields are wrong, log the error and return a 400 status
-      console.log(validate.error);
-
-      res.status(400).end();
-      return;
-    }
 
     const user = await loginUser(req.body);
-
     if (user) {
       //check if password matches
       const result = req.body.password === user.password;
@@ -272,6 +183,8 @@ router.post("/login", async function (req, res) {
       } else {
         res.status(400).json({ error: "password doesn't match" });
       }
+    } else if (user == 3) {
+      res.status(400).json({ error: "validate user error" }).end();
     } else {
       res.status(400).json({ error: "User doesn't exist" });
     }
